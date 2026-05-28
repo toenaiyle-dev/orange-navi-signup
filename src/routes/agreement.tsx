@@ -332,24 +332,13 @@ function AgreementPage() {
                   <div className="grid sm:grid-cols-2 gap-4 mt-4">
                     <TextField name="instructor_name" label="Instructor Full Name" value={form.instructor_name} onChange={(e) => set("instructor_name")(e.target.value)} error={errors.instructor_name} />
 
-                    <div>
-                      <Label className="text-sm">Assigned Course / Specialization</Label>
-                      <Select value={form.assigned_course} onValueChange={set("assigned_course")}>
-                        <SelectTrigger className={`mt-1 ${errors.assigned_course ? "border-destructive" : ""}`}>
-                          <SelectValue placeholder="Select a course" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {COURSES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                      {errors.assigned_course && <p className="text-xs text-destructive mt-1">{errors.assigned_course}</p>}
-                    </div>
+                    <TextField name="onboarding_date" label="Date of Onboarding" type="date" value={form.onboarding_date} onChange={(e) => set("onboarding_date")(e.target.value)} error={errors.onboarding_date} />
 
                     <div>
                       <Label className="text-sm">Department / Track</Label>
-                      <Select value={form.department_track} onValueChange={set("department_track")}>
+                      <Select value={form.department_track} onValueChange={setTrack}>
                         <SelectTrigger className={`mt-1 ${errors.department_track ? "border-destructive" : ""}`}>
-                          <SelectValue placeholder="Select a track" />
+                          <SelectValue placeholder="Select a track first" />
                         </SelectTrigger>
                         <SelectContent>
                           {TRACKS.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
@@ -358,36 +347,59 @@ function AgreementPage() {
                       {errors.department_track && <p className="text-xs text-destructive mt-1">{errors.department_track}</p>}
                     </div>
 
-                    <TextField name="onboarding_date" label="Date of Onboarding" type="date" value={form.onboarding_date} onChange={(e) => set("onboarding_date")(e.target.value)} error={errors.onboarding_date} />
+                    <div>
+                      <Label className="text-sm">Assigned Course / Specialization</Label>
+                      <Select
+                        value={form.assigned_course}
+                        onValueChange={set("assigned_course")}
+                        disabled={!form.department_track}
+                      >
+                        <SelectTrigger className={`mt-1 ${errors.assigned_course ? "border-destructive" : ""}`}>
+                          <SelectValue placeholder={form.department_track ? "Select a course" : "Pick a track first"} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {(form.department_track
+                            ? (COURSES_BY_TRACK as Record<string, readonly string[]>)[form.department_track] ?? []
+                            : []
+                          ).map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                      {errors.assigned_course && <p className="text-xs text-destructive mt-1">{errors.assigned_course}</p>}
+                    </div>
                   </div>
                 </section>
 
                 <section>
                   <h2 className="text-lg font-bold text-[var(--navy)] border-l-4 border-primary pl-3">2. Core Requirements Verification</h2>
-                  <p className="text-sm text-muted-foreground mt-1">Add your initials beside each requirement.</p>
+                  <p className="text-sm text-muted-foreground mt-1">Tick each requirement to confirm you meet it.</p>
                   <div className="mt-4 space-y-3">
                     {reqs.map((r) => {
                       const errKey = r.key as keyof AgreementData;
                       const err = errors[errKey];
+                      const checked = form[r.key as keyof FormState] === "Confirmed";
                       return (
-                        <div key={r.key} className={`flex gap-4 items-start border rounded-md p-4 ${err ? "border-destructive bg-destructive/5" : "border-border bg-muted/40"}`}>
+                        <label
+                          key={r.key}
+                          htmlFor={r.key}
+                          className={`flex gap-4 items-start border rounded-md p-4 cursor-pointer transition-colors ${
+                            err ? "border-destructive bg-destructive/5"
+                            : checked ? "border-primary bg-primary/5"
+                            : "border-border bg-muted/40 hover:bg-muted"
+                          }`}
+                        >
                           <div className="bg-[var(--navy)] text-[var(--navy-foreground)] font-bold text-xs rounded px-2 py-1 shrink-0">{r.code}</div>
                           <div className="flex-1">
                             <div className="font-semibold text-[var(--navy)]">{r.title}</div>
                             <p className="text-sm text-muted-foreground">{r.desc}</p>
-                          </div>
-                          <div className="w-28 shrink-0">
-                            <Label className="text-xs">Initials</Label>
-                            <Input
-                              maxLength={6}
-                              value={form[r.key as keyof FormState] as string}
-                              onChange={(e) => set(r.key as keyof FormState)(e.target.value)}
-                              placeholder="ABC"
-                              className={`uppercase ${err ? "border-destructive" : ""}`}
-                            />
                             {err && <p className="text-xs text-destructive mt-1">{err}</p>}
                           </div>
-                        </div>
+                          <Checkbox
+                            id={r.key}
+                            checked={checked}
+                            onCheckedChange={(v) => toggleReq(r.key as keyof FormState)(v === true)}
+                            className="mt-1 h-5 w-5"
+                          />
+                        </label>
                       );
                     })}
                   </div>
