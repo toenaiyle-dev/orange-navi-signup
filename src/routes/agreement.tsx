@@ -437,8 +437,10 @@ function Header({ email, onSignOut }: { email?: string; onSignOut: () => void })
   return (
     <header className="bg-[var(--navy)] text-[var(--navy-foreground)] py-4 px-6 flex items-center justify-between">
       <Link to="/" className="flex items-center gap-2">
-        <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary text-primary-foreground font-bold">D</div>
-        <span className="font-bold">DreamMore Academics</span>
+        <div className="flex h-10 w-10 items-center justify-center rounded-md bg-white/95 p-1 shadow-sm">
+          <img src={logoUrl} alt="DreamMore" className="h-full w-full object-contain" />
+        </div>
+        <span className="font-bold tracking-tight">DreamMore Academics</span>
       </Link>
       <div className="flex items-center gap-3 text-sm">
         <span className="opacity-80 hidden sm:inline">{email}</span>
