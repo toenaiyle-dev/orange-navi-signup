@@ -37,6 +37,7 @@ const schema = z.object({
 
 function AgreementPage() {
   const navigate = useNavigate();
+  const { user, loading } = useAuth();
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
   const today = new Date().toISOString().slice(0, 10);
@@ -86,7 +87,6 @@ function AgreementPage() {
     }
     toast.success("Agreement submitted!");
     setDone(true);
-  };
   };
 
   const signOut = async () => {
