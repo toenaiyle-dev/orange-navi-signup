@@ -59,8 +59,6 @@ const schema = z.object({
   (d) => (COURSES_BY_TRACK as Record<string, readonly string[]>)[d.department_track]?.includes(d.assigned_course),
   { message: "Selected course does not belong to the chosen track", path: ["assigned_course"] },
 );
-  signed_date: z.string().min(1, "Pick the signature date"),
-});
 
 type FormState = Omit<AgreementData, "signature" | "admin_signature" | "admin_signed_date">;
 type FieldErrors = Partial<Record<keyof AgreementData, string>>;
