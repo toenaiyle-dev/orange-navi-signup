@@ -10,7 +10,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
-import { AlertCircle, Check, CheckCircle2, Clock, Download, Loader2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, Clock, Download, Loader2 } from "lucide-react";
 import { SignaturePad, type SignaturePadHandle } from "@/components/SignaturePad";
 import { FilledAgreementDocument, type AgreementData } from "@/components/FilledAgreementDocument";
 import { DocumentDetails } from "@/components/DocumentDetails";
