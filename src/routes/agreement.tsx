@@ -121,7 +121,7 @@ function AgreementPage() {
 
   useEffect(() => { refresh(); }, [refresh]);
 
-  const set = <K extends keyof FormState>(k: K) => (v: string) => {
+  const set = <K extends keyof FormState,>(k: K) => (v: string) => {
     setForm((f) => ({ ...f, [k]: v }));
     setErrors((er) => ({ ...er, [k]: undefined }));
   };
