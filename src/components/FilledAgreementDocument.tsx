@@ -11,6 +11,8 @@ export type AgreementData = {
   r4_initials: string;
   signature: string; // data URL of signature image
   signed_date: string;
+  admin_signature?: string | null;
+  admin_signed_date?: string | null;
 };
 
 const REQS = [
@@ -225,11 +227,15 @@ export const FilledAgreementDocument = forwardRef<HTMLDivElement, { data: Agreem
 
             <div>
               <div style={{ fontSize: 11, color: "#6b7280", marginBottom: 4 }}>Authorized by (DreamMore)</div>
-              <div style={{ border: `1.5px dashed #cbd5e1`, height: 110 }} />
-              <div style={{ fontWeight: 700, color: "#9ca3af", marginTop: 6 }}>____________________</div>
+              <div style={{ border: `1.5px solid ${navy}`, height: 110, display: "flex", alignItems: "center", justifyContent: "center", background: "#fff" }}>
+                {data.admin_signature ? (
+                  <img src={data.admin_signature} alt="Admin signature" crossOrigin="anonymous" style={{ maxHeight: "100%", maxWidth: "100%" }} />
+                ) : null}
+              </div>
+              <div style={{ fontWeight: 700, color: navy, marginTop: 6 }}>DreamMore Administrator</div>
               <div style={{ marginTop: 10 }}>
                 <span style={{ color: "#6b7280" }}>Date: </span>
-                <span style={{ borderBottom: `1.5px solid #cbd5e1`, padding: "0 50px" }}> </span>
+                <span style={{ borderBottom: `1.5px solid ${navy}`, padding: "0 30px", fontWeight: 600, color: navy }}>{data.admin_signed_date || ""}</span>
               </div>
             </div>
           </div>
