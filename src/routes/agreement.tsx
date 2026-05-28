@@ -132,6 +132,26 @@ function AgreementPage() {
     setErrors((er) => ({ ...er, [k]: undefined }));
   };
 
+  const setTrack = (v: string) => {
+    setForm((f) => ({ ...f, department_track: v, assigned_course: "" }));
+    setErrors((er) => ({ ...er, department_track: undefined, assigned_course: undefined }));
+  };
+
+  const toggleReq = (key: keyof FormState) => (checked: boolean) => {
+    setForm((f) => ({ ...f, [key]: checked ? "Confirmed" : "" }));
+    setErrors((er) => ({ ...er, [key]: undefined }));
+  };
+
+  const goToForm = () => {
+    setTab("form");
+    setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
+  };
+
+  const handleTabChange = (v: string) => {
+    setTab(v as "details" | "form");
+    setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
+  };
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitError(null);
