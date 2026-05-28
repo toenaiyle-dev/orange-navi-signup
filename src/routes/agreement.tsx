@@ -21,8 +21,6 @@ import logoUrl from "@/assets/dreammore-logo.svg";
 export const Route = createFileRoute("/agreement")({
   head: () => ({ meta: [{ title: "Trainer Readiness Agreement — DreamMore" }] }),
   component: AgreementPage,
-});
-
 const reqs = [
   { key: "r1_initials", code: "R1", title: "Practical Skill", desc: "I confirm I possess practical, real-world mastery in my assigned course field and have a demonstrable portfolio." },
   { key: "r2_initials", code: "R2", title: "LMS Readiness", desc: "I confirm I am ready to record video tutorials, write PDF guides, and create cheat sheets for my assigned course." },
@@ -35,24 +33,30 @@ const LABELS: Record<string, string> = {
   assigned_course: "Assigned Course / Specialization",
   department_track: "Department / Track",
   onboarding_date: "Date of Onboarding",
-  r1_initials: "R1 Initials",
-  r2_initials: "R2 Initials",
-  r3_initials: "R3 Initials",
-  r4_initials: "R4 Initials",
+  r1_initials: "Requirement R1",
+  r2_initials: "Requirement R2",
+  r3_initials: "Requirement R3",
+  r4_initials: "Requirement R4",
   signature: "Signature",
   signed_date: "Signature Date",
 };
 
+const tickMsg = "Please tick to confirm";
 const schema = z.object({
   instructor_name: z.string().trim().min(2, "Enter your full name").max(120, "Too long"),
-  assigned_course: z.enum(COURSES, { message: "Pick a course from the list" }),
   department_track: z.enum(["Track A", "Track B"], { message: "Pick Track A or Track B" }),
+  assigned_course: z.enum(COURSES as unknown as [string, ...string[]], { message: "Pick a course from the list" }),
   onboarding_date: z.string().min(1, "Pick the onboarding date"),
-  r1_initials: z.string().trim().min(2, "Add your initials (min 2)").max(6, "Initials too long"),
-  r2_initials: z.string().trim().min(2, "Add your initials (min 2)").max(6, "Initials too long"),
-  r3_initials: z.string().trim().min(2, "Add your initials (min 2)").max(6, "Initials too long"),
-  r4_initials: z.string().trim().min(2, "Add your initials (min 2)").max(6, "Initials too long"),
+  r1_initials: z.literal("Confirmed", { message: tickMsg }),
+  r2_initials: z.literal("Confirmed", { message: tickMsg }),
+  r3_initials: z.literal("Confirmed", { message: tickMsg }),
+  r4_initials: z.literal("Confirmed", { message: tickMsg }),
   signature: z.string().min(50, "Please draw your signature").max(2_000_000, "Signature too large"),
+  signed_date: z.string().min(1, "Pick the signature date"),
+}).refine(
+  (d) => (COURSES_BY_TRACK as Record<string, readonly string[]>)[d.department_track]?.includes(d.assigned_course),
+  { message: "Selected course does not belong to the chosen track", path: ["assigned_course"] },
+);
   signed_date: z.string().min(1, "Pick the signature date"),
 });
 
