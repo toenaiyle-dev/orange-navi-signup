@@ -303,7 +303,7 @@ function AgreementPage() {
         </div>
 
         <div className="bg-card rounded-b-lg shadow-md p-6">
-          <Tabs value={tab} onValueChange={(v) => setTab(v as "details" | "form")}>
+          <Tabs value={tab} onValueChange={handleTabChange}>
             <TabsList className="grid grid-cols-2 w-full">
               <TabsTrigger value="details">1. Document Details</TabsTrigger>
               <TabsTrigger value="form">2. Application Form</TabsTrigger>
@@ -312,7 +312,7 @@ function AgreementPage() {
             <TabsContent value="details" className="mt-6">
               <DocumentDetails />
               <div className="flex justify-end mt-6">
-                <Button onClick={() => setTab("form")} className="bg-primary text-primary-foreground hover:bg-primary/90">
+                <Button onClick={goToForm} className="bg-primary text-primary-foreground hover:bg-primary/90">
                   Continue to Application Form →
                 </Button>
               </div>
