@@ -44,10 +44,14 @@ function Page({ children, n }: { children: React.ReactNode; n: number }) {
       }}
     >
       {/* Header bar */}
+      {/* Header bar */}
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 24 }}>
-        <div style={{ width: 34, height: 34, background: orange, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, borderRadius: 4 }}>D</div>
+        <div style={{ width: 40, height: 40, background: "#fff", border: `1px solid ${orange}`, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 6, padding: 3 }}>
+          <img src={logoUrl} alt="DreamMore" crossOrigin="anonymous" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
+        </div>
         <div style={{ fontWeight: 700, color: navy, fontSize: 14 }}>DreamMore</div>
       </div>
+      {children}
       {children}
       <div style={{ position: "absolute", left: 56, right: 56, bottom: 24, display: "flex", justifyContent: "space-between", borderTop: `1px solid ${orange}`, paddingTop: 8, fontSize: 10, color: "#6b7280" }}>
         <span>DreamMore Academics | Right work at right time</span>
