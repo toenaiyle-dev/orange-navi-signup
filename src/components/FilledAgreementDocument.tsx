@@ -1,4 +1,5 @@
 import { forwardRef } from "react";
+import logoUrl from "@/assets/dreammore-logo.svg";
 
 export type AgreementData = {
   instructor_name: string;
