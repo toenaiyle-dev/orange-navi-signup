@@ -37,10 +37,10 @@ const schema = z.object({
 
 function AgreementPage() {
   const navigate = useNavigate();
-  const { user, loading } = useAuth();
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
   const today = new Date().toISOString().slice(0, 10);
+  const sigRef = useRef<SignaturePadHandle>(null);
 
   const [form, setForm] = useState({
     instructor_name: "",
@@ -51,7 +51,6 @@ function AgreementPage() {
     r2_initials: "",
     r3_initials: "",
     r4_initials: "",
-    signature: "",
     signed_date: today,
   });
 
@@ -64,7 +63,12 @@ function AgreementPage() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const parsed = schema.safeParse(form);
+    const signature = sigRef.current?.toDataURL();
+    if (!signature) {
+      toast.error("Please draw your signature before submitting.");
+      return;
+    }
+    const parsed = schema.safeParse({ ...form, signature });
     if (!parsed.success) {
       toast.error(parsed.error.issues[0].message);
       return;
@@ -82,6 +86,7 @@ function AgreementPage() {
     }
     toast.success("Agreement submitted!");
     setDone(true);
+  };
   };
 
   const signOut = async () => {
