@@ -178,11 +178,6 @@ function AgreementPage() {
               </div>
             </div>
           </section>
-            <div className="grid sm:grid-cols-2 gap-4 mt-4">
-              <Field label="Instructor Signature (full name)" value={form.signature} onChange={set("signature")} />
-              <Field label="Date" type="date" value={form.signed_date} onChange={set("signed_date")} />
-            </div>
-          </section>
 
           <div className="flex justify-end gap-3 pt-4 border-t border-border">
             <Button type="submit" disabled={busy} size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90">
