@@ -24,3 +24,10 @@ function Index() {
     else if (isAdmin) navigate({ to: "/admin", replace: true });
     else navigate({ to: "/agreement", replace: true });
   }, [user, loading, isAdmin, roleLoading, navigate]);
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background text-muted-foreground">
+      Loading…
+    </div>
+  );
+}
