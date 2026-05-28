@@ -162,13 +162,18 @@ function AgreementPage() {
                     />
                   </div>
                 </div>
-              ))}
-            </div>
-          </section>
-
-          {/* Section 3 */}
           <section>
             <h2 className="text-lg font-bold text-[var(--navy)] border-l-4 border-primary pl-3">3. Formal Agreement & Signature</h2>
+            <div className="mt-4 space-y-4">
+              <div>
+                <Label className="text-sm">Instructor Signature</Label>
+                <SignaturePad ref={sigRef} className="mt-1" />
+              </div>
+              <div className="sm:max-w-xs">
+                <Field label="Date" type="date" value={form.signed_date} onChange={set("signed_date")} />
+              </div>
+            </div>
+          </section>
             <div className="grid sm:grid-cols-2 gap-4 mt-4">
               <Field label="Instructor Signature (full name)" value={form.signature} onChange={set("signature")} />
               <Field label="Date" type="date" value={form.signed_date} onChange={set("signed_date")} />
