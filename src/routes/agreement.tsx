@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { CheckCircle2 } from "lucide-react";
+import { SignaturePad, type SignaturePadHandle } from "@/components/SignaturePad";
 
 export const Route = createFileRoute("/agreement")({
   head: () => ({ meta: [{ title: "Trainer Readiness Agreement — DreamMore" }] }),
@@ -36,10 +37,10 @@ const schema = z.object({
 
 function AgreementPage() {
   const navigate = useNavigate();
-  const { user, loading } = useAuth();
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
   const today = new Date().toISOString().slice(0, 10);
+  const sigRef = useRef<SignaturePadHandle>(null);
 
   const [form, setForm] = useState({
     instructor_name: "",
@@ -50,7 +51,6 @@ function AgreementPage() {
     r2_initials: "",
     r3_initials: "",
     r4_initials: "",
-    signature: "",
     signed_date: today,
   });
 
@@ -63,7 +63,12 @@ function AgreementPage() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const parsed = schema.safeParse(form);
+    const signature = sigRef.current?.toDataURL();
+    if (!signature) {
+      toast.error("Please draw your signature before submitting.");
+      return;
+    }
+    const parsed = schema.safeParse({ ...form, signature });
     if (!parsed.success) {
       toast.error(parsed.error.issues[0].message);
       return;
@@ -81,6 +86,7 @@ function AgreementPage() {
     }
     toast.success("Agreement submitted!");
     setDone(true);
+  };
   };
 
   const signOut = async () => {
@@ -160,12 +166,16 @@ function AgreementPage() {
             </div>
           </section>
 
-          {/* Section 3 */}
           <section>
             <h2 className="text-lg font-bold text-[var(--navy)] border-l-4 border-primary pl-3">3. Formal Agreement & Signature</h2>
-            <div className="grid sm:grid-cols-2 gap-4 mt-4">
-              <Field label="Instructor Signature (full name)" value={form.signature} onChange={set("signature")} />
-              <Field label="Date" type="date" value={form.signed_date} onChange={set("signed_date")} />
+            <div className="mt-4 space-y-4">
+              <div>
+                <Label className="text-sm">Instructor Signature</Label>
+                <SignaturePad ref={sigRef} className="mt-1" />
+              </div>
+              <div className="sm:max-w-xs">
+                <Field label="Date" type="date" value={form.signed_date} onChange={set("signed_date")} />
+              </div>
             </div>
           </section>
 
