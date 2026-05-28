@@ -10,11 +10,13 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
-import { AlertCircle, CheckCircle2, Clock, Download, Loader2 } from "lucide-react";
+import { AlertCircle, Check, CheckCircle2, Clock, Download, Loader2 } from "lucide-react";
 import { SignaturePad, type SignaturePadHandle } from "@/components/SignaturePad";
 import { FilledAgreementDocument, type AgreementData } from "@/components/FilledAgreementDocument";
 import { DocumentDetails } from "@/components/DocumentDetails";
-import { TRACKS, COURSES } from "@/lib/agreement-options";
+import { Checkbox } from "@/components/ui/checkbox";
+import { TRACKS, COURSES, COURSES_BY_TRACK } from "@/lib/agreement-options";
+import logoUrl from "@/assets/dreammore-logo.svg";
 
 export const Route = createFileRoute("/agreement")({
   head: () => ({ meta: [{ title: "Trainer Readiness Agreement — DreamMore" }] }),
