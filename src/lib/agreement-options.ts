@@ -3,7 +3,7 @@ export const TRACKS = [
   { value: "Track B", label: "Course Track B" },
 ] as const;
 
-export const COURSES_BY_TRACK: Record<string, readonly string[]> = {
+export const COURSES_BY_TRACK = {
   "Track A": [
     "Video Editing",
     "Graphics Design",
@@ -18,6 +18,9 @@ export const COURSES_BY_TRACK: Record<string, readonly string[]> = {
     "Tech Maintenance",
     "Digital Marketing",
   ],
-};
+} as const;
 
-export const COURSES = Object.values(COURSES_BY_TRACK).flat() as readonly string[];
+export const COURSES = [
+  ...COURSES_BY_TRACK["Track A"],
+  ...COURSES_BY_TRACK["Track B"],
+] as const;
