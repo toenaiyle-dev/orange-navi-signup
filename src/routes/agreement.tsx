@@ -14,7 +14,9 @@ import { AlertCircle, CheckCircle2, Clock, Download, Loader2 } from "lucide-reac
 import { SignaturePad, type SignaturePadHandle } from "@/components/SignaturePad";
 import { FilledAgreementDocument, type AgreementData } from "@/components/FilledAgreementDocument";
 import { DocumentDetails } from "@/components/DocumentDetails";
-import { TRACKS, COURSES } from "@/lib/agreement-options";
+import { Checkbox } from "@/components/ui/checkbox";
+import { TRACKS, COURSES, COURSES_BY_TRACK } from "@/lib/agreement-options";
+import logoUrl from "@/assets/dreammore-logo.svg";
 
 export const Route = createFileRoute("/agreement")({
   head: () => ({ meta: [{ title: "Trainer Readiness Agreement — DreamMore" }] }),
@@ -33,26 +35,30 @@ const LABELS: Record<string, string> = {
   assigned_course: "Assigned Course / Specialization",
   department_track: "Department / Track",
   onboarding_date: "Date of Onboarding",
-  r1_initials: "R1 Initials",
-  r2_initials: "R2 Initials",
-  r3_initials: "R3 Initials",
-  r4_initials: "R4 Initials",
+  r1_initials: "Requirement R1",
+  r2_initials: "Requirement R2",
+  r3_initials: "Requirement R3",
+  r4_initials: "Requirement R4",
   signature: "Signature",
   signed_date: "Signature Date",
 };
 
+const tickMsg = "Please tick to confirm";
 const schema = z.object({
   instructor_name: z.string().trim().min(2, "Enter your full name").max(120, "Too long"),
-  assigned_course: z.enum(COURSES, { message: "Pick a course from the list" }),
   department_track: z.enum(["Track A", "Track B"], { message: "Pick Track A or Track B" }),
+  assigned_course: z.enum(COURSES as unknown as [string, ...string[]], { message: "Pick a course from the list" }),
   onboarding_date: z.string().min(1, "Pick the onboarding date"),
-  r1_initials: z.string().trim().min(2, "Add your initials (min 2)").max(6, "Initials too long"),
-  r2_initials: z.string().trim().min(2, "Add your initials (min 2)").max(6, "Initials too long"),
-  r3_initials: z.string().trim().min(2, "Add your initials (min 2)").max(6, "Initials too long"),
-  r4_initials: z.string().trim().min(2, "Add your initials (min 2)").max(6, "Initials too long"),
+  r1_initials: z.literal("Confirmed", { message: tickMsg }),
+  r2_initials: z.literal("Confirmed", { message: tickMsg }),
+  r3_initials: z.literal("Confirmed", { message: tickMsg }),
+  r4_initials: z.literal("Confirmed", { message: tickMsg }),
   signature: z.string().min(50, "Please draw your signature").max(2_000_000, "Signature too large"),
   signed_date: z.string().min(1, "Pick the signature date"),
-});
+}).refine(
+  (d) => (COURSES_BY_TRACK as Record<string, readonly string[]>)[d.department_track]?.includes(d.assigned_course),
+  { message: "Selected course does not belong to the chosen track", path: ["assigned_course"] },
+);
 
 type FormState = Omit<AgreementData, "signature" | "admin_signature" | "admin_signed_date">;
 type FieldErrors = Partial<Record<keyof AgreementData, string>>;
@@ -124,6 +130,26 @@ function AgreementPage() {
   const set = <K extends keyof FormState,>(k: K) => (v: string) => {
     setForm((f) => ({ ...f, [k]: v }));
     setErrors((er) => ({ ...er, [k]: undefined }));
+  };
+
+  const setTrack = (v: string) => {
+    setForm((f) => ({ ...f, department_track: v, assigned_course: "" }));
+    setErrors((er) => ({ ...er, department_track: undefined, assigned_course: undefined }));
+  };
+
+  const toggleReq = (key: keyof FormState) => (checked: boolean) => {
+    setForm((f) => ({ ...f, [key]: checked ? "Confirmed" : "" }));
+    setErrors((er) => ({ ...er, [key]: undefined }));
+  };
+
+  const goToForm = () => {
+    setTab("form");
+    setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
+  };
+
+  const handleTabChange = (v: string) => {
+    setTab(v as "details" | "form");
+    setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
   };
 
   const submit = async (e: React.FormEvent) => {
@@ -277,7 +303,7 @@ function AgreementPage() {
         </div>
 
         <div className="bg-card rounded-b-lg shadow-md p-6">
-          <Tabs value={tab} onValueChange={(v) => setTab(v as "details" | "form")}>
+          <Tabs value={tab} onValueChange={handleTabChange}>
             <TabsList className="grid grid-cols-2 w-full">
               <TabsTrigger value="details">1. Document Details</TabsTrigger>
               <TabsTrigger value="form">2. Application Form</TabsTrigger>
@@ -286,7 +312,7 @@ function AgreementPage() {
             <TabsContent value="details" className="mt-6">
               <DocumentDetails />
               <div className="flex justify-end mt-6">
-                <Button onClick={() => setTab("form")} className="bg-primary text-primary-foreground hover:bg-primary/90">
+                <Button onClick={goToForm} className="bg-primary text-primary-foreground hover:bg-primary/90">
                   Continue to Application Form →
                 </Button>
               </div>
@@ -306,24 +332,13 @@ function AgreementPage() {
                   <div className="grid sm:grid-cols-2 gap-4 mt-4">
                     <TextField name="instructor_name" label="Instructor Full Name" value={form.instructor_name} onChange={(e) => set("instructor_name")(e.target.value)} error={errors.instructor_name} />
 
-                    <div>
-                      <Label className="text-sm">Assigned Course / Specialization</Label>
-                      <Select value={form.assigned_course} onValueChange={set("assigned_course")}>
-                        <SelectTrigger className={`mt-1 ${errors.assigned_course ? "border-destructive" : ""}`}>
-                          <SelectValue placeholder="Select a course" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {COURSES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                      {errors.assigned_course && <p className="text-xs text-destructive mt-1">{errors.assigned_course}</p>}
-                    </div>
+                    <TextField name="onboarding_date" label="Date of Onboarding" type="date" value={form.onboarding_date} onChange={(e) => set("onboarding_date")(e.target.value)} error={errors.onboarding_date} />
 
                     <div>
                       <Label className="text-sm">Department / Track</Label>
-                      <Select value={form.department_track} onValueChange={set("department_track")}>
+                      <Select value={form.department_track} onValueChange={setTrack}>
                         <SelectTrigger className={`mt-1 ${errors.department_track ? "border-destructive" : ""}`}>
-                          <SelectValue placeholder="Select a track" />
+                          <SelectValue placeholder="Select a track first" />
                         </SelectTrigger>
                         <SelectContent>
                           {TRACKS.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
@@ -332,36 +347,59 @@ function AgreementPage() {
                       {errors.department_track && <p className="text-xs text-destructive mt-1">{errors.department_track}</p>}
                     </div>
 
-                    <TextField name="onboarding_date" label="Date of Onboarding" type="date" value={form.onboarding_date} onChange={(e) => set("onboarding_date")(e.target.value)} error={errors.onboarding_date} />
+                    <div>
+                      <Label className="text-sm">Assigned Course / Specialization</Label>
+                      <Select
+                        value={form.assigned_course}
+                        onValueChange={set("assigned_course")}
+                        disabled={!form.department_track}
+                      >
+                        <SelectTrigger className={`mt-1 ${errors.assigned_course ? "border-destructive" : ""}`}>
+                          <SelectValue placeholder={form.department_track ? "Select a course" : "Pick a track first"} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {(form.department_track
+                            ? (COURSES_BY_TRACK as Record<string, readonly string[]>)[form.department_track] ?? []
+                            : []
+                          ).map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                      {errors.assigned_course && <p className="text-xs text-destructive mt-1">{errors.assigned_course}</p>}
+                    </div>
                   </div>
                 </section>
 
                 <section>
                   <h2 className="text-lg font-bold text-[var(--navy)] border-l-4 border-primary pl-3">2. Core Requirements Verification</h2>
-                  <p className="text-sm text-muted-foreground mt-1">Add your initials beside each requirement.</p>
+                  <p className="text-sm text-muted-foreground mt-1">Tick each requirement to confirm you meet it.</p>
                   <div className="mt-4 space-y-3">
                     {reqs.map((r) => {
                       const errKey = r.key as keyof AgreementData;
                       const err = errors[errKey];
+                      const checked = form[r.key as keyof FormState] === "Confirmed";
                       return (
-                        <div key={r.key} className={`flex gap-4 items-start border rounded-md p-4 ${err ? "border-destructive bg-destructive/5" : "border-border bg-muted/40"}`}>
+                        <label
+                          key={r.key}
+                          htmlFor={r.key}
+                          className={`flex gap-4 items-start border rounded-md p-4 cursor-pointer transition-colors ${
+                            err ? "border-destructive bg-destructive/5"
+                            : checked ? "border-primary bg-primary/5"
+                            : "border-border bg-muted/40 hover:bg-muted"
+                          }`}
+                        >
                           <div className="bg-[var(--navy)] text-[var(--navy-foreground)] font-bold text-xs rounded px-2 py-1 shrink-0">{r.code}</div>
                           <div className="flex-1">
                             <div className="font-semibold text-[var(--navy)]">{r.title}</div>
                             <p className="text-sm text-muted-foreground">{r.desc}</p>
-                          </div>
-                          <div className="w-28 shrink-0">
-                            <Label className="text-xs">Initials</Label>
-                            <Input
-                              maxLength={6}
-                              value={form[r.key as keyof FormState] as string}
-                              onChange={(e) => set(r.key as keyof FormState)(e.target.value)}
-                              placeholder="ABC"
-                              className={`uppercase ${err ? "border-destructive" : ""}`}
-                            />
                             {err && <p className="text-xs text-destructive mt-1">{err}</p>}
                           </div>
-                        </div>
+                          <Checkbox
+                            id={r.key}
+                            checked={checked}
+                            onCheckedChange={(v) => toggleReq(r.key as keyof FormState)(v === true)}
+                            className="mt-1 h-5 w-5"
+                          />
+                        </label>
                       );
                     })}
                   </div>
@@ -399,8 +437,10 @@ function Header({ email, onSignOut }: { email?: string; onSignOut: () => void })
   return (
     <header className="bg-[var(--navy)] text-[var(--navy-foreground)] py-4 px-6 flex items-center justify-between">
       <Link to="/" className="flex items-center gap-2">
-        <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary text-primary-foreground font-bold">D</div>
-        <span className="font-bold">DreamMore Academics</span>
+        <div className="flex h-10 w-10 items-center justify-center rounded-md bg-white/95 p-1 shadow-sm">
+          <img src={logoUrl} alt="DreamMore" className="h-full w-full object-contain" />
+        </div>
+        <span className="font-bold tracking-tight">DreamMore Academics</span>
       </Link>
       <div className="flex items-center gap-3 text-sm">
         <span className="opacity-80 hidden sm:inline">{email}</span>

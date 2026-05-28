@@ -1,4 +1,5 @@
 import { forwardRef } from "react";
+import logoUrl from "@/assets/dreammore-logo.svg";
 
 export type AgreementData = {
   instructor_name: string;
@@ -43,10 +44,14 @@ function Page({ children, n }: { children: React.ReactNode; n: number }) {
       }}
     >
       {/* Header bar */}
+      {/* Header bar */}
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 24 }}>
-        <div style={{ width: 34, height: 34, background: orange, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, borderRadius: 4 }}>D</div>
+        <div style={{ width: 40, height: 40, background: "#fff", border: `1px solid ${orange}`, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 6, padding: 3 }}>
+          <img src={logoUrl} alt="DreamMore" crossOrigin="anonymous" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
+        </div>
         <div style={{ fontWeight: 700, color: navy, fontSize: 14 }}>DreamMore</div>
       </div>
+      {children}
       {children}
       <div style={{ position: "absolute", left: 56, right: 56, bottom: 24, display: "flex", justifyContent: "space-between", borderTop: `1px solid ${orange}`, paddingTop: 8, fontSize: 10, color: "#6b7280" }}>
         <span>DreamMore Academics | Right work at right time</span>
@@ -179,25 +184,29 @@ export const FilledAgreementDocument = forwardRef<HTMLDivElement, { data: Agreem
           </div>
 
           <h3 style={{ color: navy, marginTop: 12 }}>2. Core Requirements Verification Checklist</h3>
-          <p style={{ fontStyle: "italic", color: "#6b7280", marginTop: 0 }}>Initialed by instructor to confirm compliance.</p>
+          <p style={{ fontStyle: "italic", color: "#6b7280", marginTop: 0 }}>Ticked by instructor to confirm compliance.</p>
           <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 6 }}>
             <thead>
               <tr style={{ background: navy, color: "#fff" }}>
                 <th style={{ padding: 6, textAlign: "left", width: "22%" }}>REQ.</th>
                 <th style={{ padding: 6, textAlign: "left" }}>REQUIREMENT DESCRIPTION</th>
-                <th style={{ padding: 6, textAlign: "center", width: "18%" }}>INITIALS</th>
+                <th style={{ padding: 6, textAlign: "center", width: "18%" }}>CONFIRMED</th>
               </tr>
             </thead>
             <tbody>
-              {REQS.map((r, i) => (
-                <tr key={r.code} style={{ background: i % 2 ? "#fff8f0" : "#fff" }}>
-                  <td style={{ padding: 6, border: "1px solid #e5e7eb", fontWeight: 700, color: navy }}>{r.code}</td>
-                  <td style={{ padding: 6, border: "1px solid #e5e7eb" }}>{r.text}</td>
-                  <td style={{ padding: 6, border: "1px solid #e5e7eb", textAlign: "center", color: orange, fontWeight: 700, textTransform: "uppercase" }}>
-                    {[data.r1_initials, data.r2_initials, data.r3_initials, data.r4_initials][i]}
-                  </td>
-                </tr>
-              ))}
+              {REQS.map((r, i) => {
+                const value = [data.r1_initials, data.r2_initials, data.r3_initials, data.r4_initials][i];
+                const ok = !!value && value.trim().length > 0;
+                return (
+                  <tr key={r.code} style={{ background: i % 2 ? "#fff8f0" : "#fff" }}>
+                    <td style={{ padding: 6, border: "1px solid #e5e7eb", fontWeight: 700, color: navy }}>{r.code}</td>
+                    <td style={{ padding: 6, border: "1px solid #e5e7eb" }}>{r.text}</td>
+                    <td style={{ padding: 6, border: "1px solid #e5e7eb", textAlign: "center", color: orange, fontWeight: 700, fontSize: 18 }}>
+                      {ok ? "✓" : ""}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </Page>
