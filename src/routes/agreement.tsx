@@ -1,15 +1,20 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
-import { AlertCircle, CheckCircle2, Download, Loader2 } from "lucide-react";
+import { useUserRole } from "@/hooks/useUserRole";
+import { AlertCircle, CheckCircle2, Clock, Download, Loader2 } from "lucide-react";
 import { SignaturePad, type SignaturePadHandle } from "@/components/SignaturePad";
 import { FilledAgreementDocument, type AgreementData } from "@/components/FilledAgreementDocument";
+import { DocumentDetails } from "@/components/DocumentDetails";
+import { TRACKS, COURSES } from "@/lib/agreement-options";
 
 export const Route = createFileRoute("/agreement")({
   head: () => ({ meta: [{ title: "Trainer Readiness Agreement — DreamMore" }] }),
@@ -38,8 +43,8 @@ const LABELS: Record<string, string> = {
 
 const schema = z.object({
   instructor_name: z.string().trim().min(2, "Enter your full name").max(120, "Too long"),
-  assigned_course: z.string().trim().min(2, "Enter the assigned course").max(120, "Too long"),
-  department_track: z.string().trim().min(2, "Enter your department/track").max(120, "Too long"),
+  assigned_course: z.enum(COURSES, { message: "Pick a course from the list" }),
+  department_track: z.enum(["Track A", "Track B"], { message: "Pick Track A or Track B" }),
   onboarding_date: z.string().min(1, "Pick the onboarding date"),
   r1_initials: z.string().trim().min(2, "Add your initials (min 2)").max(6, "Initials too long"),
   r2_initials: z.string().trim().min(2, "Add your initials (min 2)").max(6, "Initials too long"),
@@ -49,8 +54,9 @@ const schema = z.object({
   signed_date: z.string().min(1, "Pick the signature date"),
 });
 
-type FormState = Omit<AgreementData, "signature">;
+type FormState = Omit<AgreementData, "signature" | "admin_signature" | "admin_signed_date">;
 type FieldErrors = Partial<Record<keyof AgreementData, string>>;
+type AgreementRow = AgreementData & { id: string; status: string; admin_signature: string | null; admin_signed_date: string | null };
 
 function friendlySupabaseError(err: { message?: string; code?: string } | null | undefined): string {
   if (!err) return "Unknown error";
@@ -66,6 +72,7 @@ function friendlySupabaseError(err: { message?: string; code?: string } | null |
 function AgreementPage() {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
+  const { isAdmin, loading: roleLoading } = useUserRole();
   const today = new Date().toISOString().slice(0, 10);
   const sigRef = useRef<SignaturePadHandle>(null);
 
@@ -84,16 +91,38 @@ function AgreementPage() {
   const [errors, setErrors] = useState<FieldErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [submitted, setSubmitted] = useState<AgreementData | null>(null);
+  const [existing, setExisting] = useState<AgreementRow | null>(null);
+  const [fetching, setFetching] = useState(true);
   const [downloading, setDownloading] = useState(false);
+  const [tab, setTab] = useState<"details" | "form">("details");
   const docRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth" });
   }, [user, loading, navigate]);
 
-  const set = (k: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm((f) => ({ ...f, [k]: e.target.value }));
+  useEffect(() => {
+    if (!roleLoading && isAdmin) navigate({ to: "/admin" });
+  }, [isAdmin, roleLoading, navigate]);
+
+  const refresh = useCallback(async () => {
+    if (!user) return;
+    setFetching(true);
+    const { data } = await supabase
+      .from("trainer_agreements")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    setExisting((data as AgreementRow | null) ?? null);
+    setFetching(false);
+  }, [user]);
+
+  useEffect(() => { refresh(); }, [refresh]);
+
+  const set = <K extends keyof FormState>(k: K) => (v: string) => {
+    setForm((f) => ({ ...f, [k]: v }));
     setErrors((er) => ({ ...er, [k]: undefined }));
   };
 
@@ -117,18 +146,13 @@ function AgreementPage() {
       toast.error(`${label}: ${first.message}`);
       return;
     }
-
-    if (!user) {
-      setSubmitError("Your session expired. Please sign in again.");
-      toast.error("Session expired");
-      return;
-    }
+    if (!user) { toast.error("Session expired"); return; }
 
     setBusy(true);
     try {
       const { error } = await supabase
         .from("trainer_agreements")
-        .insert({ ...parsed.data, user_id: user.id });
+        .insert({ ...parsed.data, user_id: user.id, status: "pending" });
 
       if (error) {
         const friendly = friendlySupabaseError(error);
@@ -136,9 +160,8 @@ function AgreementPage() {
         toast.error(friendly);
         return;
       }
-
-      toast.success("Agreement submitted successfully!");
-      setSubmitted(parsed.data);
+      toast.success("Agreement submitted — awaiting admin approval");
+      await refresh();
     } catch (err: any) {
       const msg = err?.message ?? "Unexpected error";
       setSubmitError(msg);
@@ -154,18 +177,16 @@ function AgreementPage() {
   };
 
   const downloadPdf = async () => {
-    if (!docRef.current || !submitted) return;
+    if (!docRef.current || !existing) return;
     setDownloading(true);
     try {
       const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
         import("html2canvas"),
         import("jspdf"),
       ]);
-
       const pdf = new jsPDF({ unit: "pt", format: "a4" });
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
-
       const pages = Array.from(docRef.current.children) as HTMLElement[];
       for (let i = 0; i < pages.length; i++) {
         const canvas = await html2canvas(pages[i], { scale: 2, backgroundColor: "#ffffff", useCORS: true });
@@ -175,8 +196,7 @@ function AgreementPage() {
         if (i > 0) pdf.addPage();
         pdf.addImage(img, "JPEG", 0, 0, pageWidth, h);
       }
-
-      pdf.save(`DreamMore-Agreement-${submitted.instructor_name.replace(/\s+/g, "_") || "trainer"}.pdf`);
+      pdf.save(`DreamMore-Agreement-${existing.instructor_name.replace(/\s+/g, "_") || "trainer"}.pdf`);
       toast.success("Document downloaded");
     } catch (err: any) {
       toast.error(`Could not generate PDF: ${err?.message ?? "unknown error"}`);
@@ -185,7 +205,7 @@ function AgreementPage() {
     }
   };
 
-  if (loading || !user) {
+  if (loading || !user || fetching) {
     return (
       <div className="min-h-screen flex items-center justify-center text-muted-foreground">
         <Loader2 className="h-5 w-5 animate-spin mr-2" /> Loading…
@@ -193,37 +213,51 @@ function AgreementPage() {
     );
   }
 
-  if (submitted) {
+  // Pending state
+  if (existing && existing.status === "pending") {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <Header email={user.email} onSignOut={signOut} />
+        <main className="flex-1 mx-auto w-full max-w-2xl px-4 py-10">
+          <div className="bg-card rounded-lg shadow-md p-8 border-t-4 border-primary text-center">
+            <Clock className="h-16 w-16 text-primary mx-auto" />
+            <h2 className="text-2xl font-bold text-[var(--navy)] mt-4">Awaiting admin approval</h2>
+            <p className="text-muted-foreground mt-2">
+              Thanks, {existing.instructor_name}. Your agreement was submitted on{" "}
+              {existing.signed_date}. An administrator will review and counter-sign it shortly.
+              You'll be able to download the signed PDF here once approved.
+            </p>
+            <Button variant="outline" onClick={refresh} className="mt-6">
+              Check status
+            </Button>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // Approved state
+  if (existing && existing.status === "approved") {
     return (
       <div className="min-h-screen bg-background flex flex-col">
         <Header email={user.email} onSignOut={signOut} />
         <main className="flex-1 mx-auto w-full max-w-3xl px-4 py-10">
           <div className="bg-card rounded-lg shadow-md p-8 border-t-4 border-primary text-center">
             <CheckCircle2 className="h-16 w-16 text-primary mx-auto" />
-            <h2 className="text-2xl font-bold text-[var(--navy)] mt-4">Welcome aboard, {submitted.instructor_name}!</h2>
-            <p className="text-muted-foreground mt-2">
-              Your Trainer Readiness Agreement has been submitted. Download a copy of the signed document below.
-            </p>
+            <h2 className="text-2xl font-bold text-[var(--navy)] mt-4">Approved — welcome aboard, {existing.instructor_name}!</h2>
+            <p className="text-muted-foreground mt-2">Your agreement has been signed by DreamMore administration.</p>
             <div className="flex flex-wrap justify-center gap-3 mt-6">
-              <Button
-                onClick={downloadPdf}
-                disabled={downloading}
-                className="bg-primary text-primary-foreground hover:bg-primary/90"
-              >
+              <Button onClick={downloadPdf} disabled={downloading} className="bg-primary text-primary-foreground hover:bg-primary/90">
                 {downloading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Download className="h-4 w-4 mr-2" />}
                 Download Agreement (PDF)
               </Button>
-              <Link to="/">
-                <Button variant="outline">Back home</Button>
-              </Link>
             </div>
           </div>
 
-          {/* Preview the generated document */}
           <h3 className="text-sm font-semibold text-muted-foreground mt-10 mb-2">Document preview</h3>
           <div className="overflow-auto border border-border rounded-md bg-muted/40 p-4">
             <div style={{ transform: "scale(0.78)", transformOrigin: "top left", width: "fit-content" }}>
-              <FilledAgreementDocument ref={docRef} data={submitted} />
+              <FilledAgreementDocument ref={docRef} data={existing} />
             </div>
           </div>
         </main>
@@ -231,85 +265,131 @@ function AgreementPage() {
     );
   }
 
+  // No agreement yet — tabs view
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Header email={user.email} onSignOut={signOut} />
 
       <main className="flex-1 mx-auto w-full max-w-3xl px-4 py-10">
         <div className="bg-primary text-primary-foreground rounded-t-lg px-6 py-5">
-          <h1 className="text-2xl font-bold">Trainer Engagement & Readiness Format</h1>
-          <p className="opacity-90 text-sm mt-1">Fill in your details, initial each requirement, and sign below.</p>
+          <h1 className="text-2xl font-bold">Trainer Onboarding</h1>
+          <p className="opacity-90 text-sm mt-1">Read the document, then complete the application form.</p>
         </div>
 
-        {submitError && (
-          <div className="bg-destructive/10 border-l-4 border-destructive text-destructive px-4 py-3 flex gap-2 items-start">
-            <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
-            <div className="text-sm"><strong>Submission failed.</strong> {submitError}</div>
-          </div>
-        )}
+        <div className="bg-card rounded-b-lg shadow-md p-6">
+          <Tabs value={tab} onValueChange={(v) => setTab(v as "details" | "form")}>
+            <TabsList className="grid grid-cols-2 w-full">
+              <TabsTrigger value="details">1. Document Details</TabsTrigger>
+              <TabsTrigger value="form">2. Application Form</TabsTrigger>
+            </TabsList>
 
-        <form onSubmit={submit} noValidate className="bg-card rounded-b-lg shadow-md p-6 space-y-8">
-          <section>
-            <h2 className="text-lg font-bold text-[var(--navy)] border-l-4 border-primary pl-3">1. Course Assignment</h2>
-            <div className="grid sm:grid-cols-2 gap-4 mt-4">
-              <FormField name="instructor_name" label="Instructor Full Name" value={form.instructor_name} onChange={set("instructor_name")} error={errors.instructor_name} />
-              <FormField name="assigned_course" label="Assigned Course / Specialization" value={form.assigned_course} onChange={set("assigned_course")} error={errors.assigned_course} />
-              <FormField name="department_track" label="Department / Track" value={form.department_track} onChange={set("department_track")} error={errors.department_track} />
-              <FormField name="onboarding_date" label="Date of Onboarding" type="date" value={form.onboarding_date} onChange={set("onboarding_date")} error={errors.onboarding_date} />
-            </div>
-          </section>
+            <TabsContent value="details" className="mt-6">
+              <DocumentDetails />
+              <div className="flex justify-end mt-6">
+                <Button onClick={() => setTab("form")} className="bg-primary text-primary-foreground hover:bg-primary/90">
+                  Continue to Application Form →
+                </Button>
+              </div>
+            </TabsContent>
 
-          <section>
-            <h2 className="text-lg font-bold text-[var(--navy)] border-l-4 border-primary pl-3">2. Core Requirements Verification</h2>
-            <p className="text-sm text-muted-foreground mt-1">Add your initials beside each requirement to confirm compliance.</p>
-            <div className="mt-4 space-y-3">
-              {reqs.map((r) => {
-                const errKey = r.key as keyof AgreementData;
-                const err = errors[errKey];
-                return (
-                  <div key={r.key} className={`flex gap-4 items-start border rounded-md p-4 ${err ? "border-destructive bg-destructive/5" : "border-border bg-muted/40"}`}>
-                    <div className="bg-[var(--navy)] text-[var(--navy-foreground)] font-bold text-xs rounded px-2 py-1 shrink-0">{r.code}</div>
-                    <div className="flex-1">
-                      <div className="font-semibold text-[var(--navy)]">{r.title}</div>
-                      <p className="text-sm text-muted-foreground">{r.desc}</p>
+            <TabsContent value="form" className="mt-6">
+              {submitError && (
+                <div className="bg-destructive/10 border-l-4 border-destructive text-destructive px-4 py-3 flex gap-2 items-start mb-4">
+                  <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
+                  <div className="text-sm"><strong>Submission failed.</strong> {submitError}</div>
+                </div>
+              )}
+
+              <form onSubmit={submit} noValidate className="space-y-8">
+                <section>
+                  <h2 className="text-lg font-bold text-[var(--navy)] border-l-4 border-primary pl-3">1. Course Assignment</h2>
+                  <div className="grid sm:grid-cols-2 gap-4 mt-4">
+                    <TextField name="instructor_name" label="Instructor Full Name" value={form.instructor_name} onChange={(e) => set("instructor_name")(e.target.value)} error={errors.instructor_name} />
+
+                    <div>
+                      <Label className="text-sm">Assigned Course / Specialization</Label>
+                      <Select value={form.assigned_course} onValueChange={set("assigned_course")}>
+                        <SelectTrigger className={`mt-1 ${errors.assigned_course ? "border-destructive" : ""}`}>
+                          <SelectValue placeholder="Select a course" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {COURSES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                      {errors.assigned_course && <p className="text-xs text-destructive mt-1">{errors.assigned_course}</p>}
                     </div>
-                    <div className="w-28 shrink-0">
-                      <Label className="text-xs">Initials</Label>
-                      <Input
-                        maxLength={6}
-                        value={form[r.key as keyof FormState] as string}
-                        onChange={set(r.key as keyof FormState)}
-                        placeholder="ABC"
-                        className={`uppercase ${err ? "border-destructive" : ""}`}
-                      />
-                      {err && <p className="text-xs text-destructive mt-1">{err}</p>}
+
+                    <div>
+                      <Label className="text-sm">Department / Track</Label>
+                      <Select value={form.department_track} onValueChange={set("department_track")}>
+                        <SelectTrigger className={`mt-1 ${errors.department_track ? "border-destructive" : ""}`}>
+                          <SelectValue placeholder="Select a track" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {TRACKS.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                      {errors.department_track && <p className="text-xs text-destructive mt-1">{errors.department_track}</p>}
+                    </div>
+
+                    <TextField name="onboarding_date" label="Date of Onboarding" type="date" value={form.onboarding_date} onChange={(e) => set("onboarding_date")(e.target.value)} error={errors.onboarding_date} />
+                  </div>
+                </section>
+
+                <section>
+                  <h2 className="text-lg font-bold text-[var(--navy)] border-l-4 border-primary pl-3">2. Core Requirements Verification</h2>
+                  <p className="text-sm text-muted-foreground mt-1">Add your initials beside each requirement.</p>
+                  <div className="mt-4 space-y-3">
+                    {reqs.map((r) => {
+                      const errKey = r.key as keyof AgreementData;
+                      const err = errors[errKey];
+                      return (
+                        <div key={r.key} className={`flex gap-4 items-start border rounded-md p-4 ${err ? "border-destructive bg-destructive/5" : "border-border bg-muted/40"}`}>
+                          <div className="bg-[var(--navy)] text-[var(--navy-foreground)] font-bold text-xs rounded px-2 py-1 shrink-0">{r.code}</div>
+                          <div className="flex-1">
+                            <div className="font-semibold text-[var(--navy)]">{r.title}</div>
+                            <p className="text-sm text-muted-foreground">{r.desc}</p>
+                          </div>
+                          <div className="w-28 shrink-0">
+                            <Label className="text-xs">Initials</Label>
+                            <Input
+                              maxLength={6}
+                              value={form[r.key as keyof FormState] as string}
+                              onChange={(e) => set(r.key as keyof FormState)(e.target.value)}
+                              placeholder="ABC"
+                              className={`uppercase ${err ? "border-destructive" : ""}`}
+                            />
+                            {err && <p className="text-xs text-destructive mt-1">{err}</p>}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </section>
+
+                <section>
+                  <h2 className="text-lg font-bold text-[var(--navy)] border-l-4 border-primary pl-3">3. Formal Agreement & Signature</h2>
+                  <div className="mt-4 space-y-4">
+                    <div>
+                      <Label className="text-sm">Instructor Signature</Label>
+                      <SignaturePad ref={sigRef} className="mt-1" />
+                      {errors.signature && <p className="text-xs text-destructive mt-1">{errors.signature}</p>}
+                    </div>
+                    <div className="sm:max-w-xs">
+                      <TextField name="signed_date" label="Date" type="date" value={form.signed_date} onChange={(e) => set("signed_date")(e.target.value)} error={errors.signed_date} />
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          </section>
+                </section>
 
-          <section>
-            <h2 className="text-lg font-bold text-[var(--navy)] border-l-4 border-primary pl-3">3. Formal Agreement & Signature</h2>
-            <div className="mt-4 space-y-4">
-              <div>
-                <Label className="text-sm">Instructor Signature</Label>
-                <SignaturePad ref={sigRef} className="mt-1" />
-                {errors.signature && <p className="text-xs text-destructive mt-1">{errors.signature}</p>}
-              </div>
-              <div className="sm:max-w-xs">
-                <FormField name="signed_date" label="Date" type="date" value={form.signed_date} onChange={set("signed_date")} error={errors.signed_date} />
-              </div>
-            </div>
-          </section>
-
-          <div className="flex justify-end gap-3 pt-4 border-t border-border">
-            <Button type="submit" disabled={busy} size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90">
-              {busy ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Submitting…</> : "Submit Agreement"}
-            </Button>
-          </div>
-        </form>
+                <div className="flex justify-end gap-3 pt-4 border-t border-border">
+                  <Button type="submit" disabled={busy} size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90">
+                    {busy ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Submitting…</> : "Submit for Admin Approval"}
+                  </Button>
+                </div>
+              </form>
+            </TabsContent>
+          </Tabs>
+        </div>
       </main>
     </div>
   );
@@ -332,7 +412,7 @@ function Header({ email, onSignOut }: { email?: string; onSignOut: () => void })
   );
 }
 
-function FormField({
+function TextField({
   name, label, value, onChange, type = "text", error,
 }: {
   name: string;
@@ -353,9 +433,8 @@ function FormField({
         maxLength={120}
         className={`mt-1 ${error ? "border-destructive focus-visible:ring-destructive" : ""}`}
         aria-invalid={!!error}
-        aria-describedby={error ? `${name}-error` : undefined}
       />
-      {error && <p id={`${name}-error`} className="text-xs text-destructive mt-1">{error}</p>}
+      {error && <p className="text-xs text-destructive mt-1">{error}</p>}
     </div>
   );
 }
