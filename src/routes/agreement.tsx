@@ -162,6 +162,10 @@ function AgreementPage() {
                     />
                   </div>
                 </div>
+              ))}
+            </div>
+          </section>
+
           <section>
             <h2 className="text-lg font-bold text-[var(--navy)] border-l-4 border-primary pl-3">3. Formal Agreement & Signature</h2>
             <div className="mt-4 space-y-4">
