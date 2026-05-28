@@ -14,7 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      trainer_agreements: {
+        Row: {
+          assigned_course: string
+          created_at: string
+          department_track: string
+          id: string
+          instructor_name: string
+          onboarding_date: string
+          r1_initials: string
+          r2_initials: string
+          r3_initials: string
+          r4_initials: string
+          signature: string
+          signed_date: string
+          user_id: string
+        }
+        Insert: {
+          assigned_course: string
+          created_at?: string
+          department_track: string
+          id?: string
+          instructor_name: string
+          onboarding_date: string
+          r1_initials: string
+          r2_initials: string
+          r3_initials: string
+          r4_initials: string
+          signature: string
+          signed_date: string
+          user_id: string
+        }
+        Update: {
+          assigned_course?: string
+          created_at?: string
+          department_track?: string
+          id?: string
+          instructor_name?: string
+          onboarding_date?: string
+          r1_initials?: string
+          r2_initials?: string
+          r3_initials?: string
+          r4_initials?: string
+          signature?: string
+          signed_date?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
