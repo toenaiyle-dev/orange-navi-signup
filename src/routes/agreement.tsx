@@ -21,6 +21,8 @@ import logoUrl from "@/assets/dreammore-logo.svg";
 export const Route = createFileRoute("/agreement")({
   head: () => ({ meta: [{ title: "Trainer Readiness Agreement — DreamMore" }] }),
   component: AgreementPage,
+});
+
 const reqs = [
   { key: "r1_initials", code: "R1", title: "Practical Skill", desc: "I confirm I possess practical, real-world mastery in my assigned course field and have a demonstrable portfolio." },
   { key: "r2_initials", code: "R2", title: "LMS Readiness", desc: "I confirm I am ready to record video tutorials, write PDF guides, and create cheat sheets for my assigned course." },
