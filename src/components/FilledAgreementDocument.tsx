@@ -47,14 +47,14 @@ function Page({ children, n }: { children: React.ReactNode; n: number }) {
       {/* Header bar */}
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 24 }}>
         <div style={{ width: 40, height: 40, background: "#fff", border: `1px solid ${orange}`, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 6, padding: 3 }}>
-          <img src={logoUrl} alt="DreamMore" crossOrigin="anonymous" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
+          <img src={logoUrl} alt="Dream-More Digital" crossOrigin="anonymous" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
         </div>
-        <div style={{ fontWeight: 700, color: navy, fontSize: 14 }}>DreamMore</div>
+        <div style={{ fontWeight: 700, color: navy, fontSize: 14 }}>Dream-More Digital</div>
       </div>
       {children}
       {children}
       <div style={{ position: "absolute", left: 56, right: 56, bottom: 24, display: "flex", justifyContent: "space-between", borderTop: `1px solid ${orange}`, paddingTop: 8, fontSize: 10, color: "#6b7280" }}>
-        <span>DreamMore Academics | Right work at right time</span>
+        <span>Dream-More Digital Academics | Right work at right time</span>
         <span>Page {n}</span>
       </div>
     </div>
@@ -77,14 +77,14 @@ export const FilledAgreementDocument = forwardRef<HTMLDivElement, { data: Agreem
         {/* PAGE 1 */}
         <Page n={1}>
           <div style={{ color: orange, fontSize: 11, fontWeight: 600, letterSpacing: 1 }}>JOINING THE</div>
-          <h1 style={{ color: navy, fontSize: 32, margin: "4px 0 6px", lineHeight: 1.15 }}>DreamMore Academics Faculty</h1>
+          <h1 style={{ color: navy, fontSize: 32, margin: "4px 0 6px", lineHeight: 1.15 }}>Dream-More Digital Academics Faculty</h1>
           <div style={{ fontStyle: "italic", color: "#6b7280", marginBottom: 18 }}>Shaping the Future of Digital Skills</div>
           <div style={{ color: navy, fontWeight: 600, marginBottom: 24 }}>Building a top-tier, organized, and practical learning environment</div>
 
           <h2 style={{ color: navy, fontSize: 18, borderLeft: `4px solid ${orange}`, paddingLeft: 10 }}>Welcome to Our Team</h2>
           <p style={{ fontStyle: "italic", color: "#374151" }}>Thank you for taking the time to meet with us today.</p>
           <p>
-            At DreamMore Academics, our ultimate goal is to build a practical, organized, and top-tier training department.
+            At Dream-More Digital Academics, our ultimate goal is to build a practical, organized, and top-tier training department.
             We are dedicated to developing high-level digital skills, supporting student growth, and producing job-ready
             creative professionals. We believe that real education comes from professionals who work in the industry — and
             that is why we are excited to discuss how your expertise aligns with our vision.
@@ -112,7 +112,7 @@ export const FilledAgreementDocument = forwardRef<HTMLDivElement, { data: Agreem
         {/* PAGE 2 */}
         <Page n={2}>
           <h2 style={{ color: navy, fontSize: 20, borderLeft: `4px solid ${orange}`, paddingLeft: 10 }}>The 4 Core Teacher Requirements</h2>
-          <p style={{ fontStyle: "italic", color: "#6b7280" }}>Every DreamMore instructor must meet these four pillars</p>
+          <p style={{ fontStyle: "italic", color: "#6b7280" }}>Every Dream-More Digital instructor must meet these four pillars</p>
 
           {[
             { code: "R1", title: "Proven Practical Skill", bullets: ["Show a portfolio of real-world work and past projects", "Demonstrate deep mastery in your specialized field", "Theory alone is not sufficient — applied expertise is required"] },
@@ -216,7 +216,7 @@ export const FilledAgreementDocument = forwardRef<HTMLDivElement, { data: Agreem
           <h2 style={{ color: navy, fontSize: 20, borderLeft: `4px solid ${orange}`, paddingLeft: 10 }}>3. Formal Agreement & Signature</h2>
           <p style={{ marginTop: 8 }}>
             By signing below, I confirm that the information provided is accurate and that I commit to meeting the four core
-            requirements outlined above as a DreamMore Academics instructor.
+            requirements outlined above as a Dream-More Digital Academics instructor.
           </p>
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 30, marginTop: 24 }}>
@@ -235,13 +235,13 @@ export const FilledAgreementDocument = forwardRef<HTMLDivElement, { data: Agreem
             </div>
 
             <div>
-              <div style={{ fontSize: 11, color: "#6b7280", marginBottom: 4 }}>Authorized by (DreamMore)</div>
+              <div style={{ fontSize: 11, color: "#6b7280", marginBottom: 4 }}>Authorized by (Dream-More Digital)</div>
               <div style={{ border: `1.5px solid ${navy}`, height: 110, display: "flex", alignItems: "center", justifyContent: "center", background: "#fff" }}>
                 {data.admin_signature ? (
                   <img src={data.admin_signature} alt="Admin signature" crossOrigin="anonymous" style={{ maxHeight: "100%", maxWidth: "100%" }} />
                 ) : null}
               </div>
-              <div style={{ fontWeight: 700, color: navy, marginTop: 6 }}>DreamMore Administrator</div>
+              <div style={{ fontWeight: 700, color: navy, marginTop: 6 }}>Dream-More Digital Administrator</div>
               <div style={{ marginTop: 10 }}>
                 <span style={{ color: "#6b7280" }}>Date: </span>
                 <span style={{ borderBottom: `1.5px solid ${navy}`, padding: "0 30px", fontWeight: 600, color: navy }}>{data.admin_signed_date || ""}</span>
@@ -250,7 +250,7 @@ export const FilledAgreementDocument = forwardRef<HTMLDivElement, { data: Agreem
           </div>
 
           <div style={{ marginTop: 50, textAlign: "center", color: navy, fontWeight: 700, fontSize: 14 }}>
-            Thank you and welcome to the DreamMore Team! — Right work at right time
+            Thank you and welcome to the Dream-More Digital Team! — Right work at right time
           </div>
         </Page>
       </div>

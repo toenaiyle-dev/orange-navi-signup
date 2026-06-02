@@ -6,8 +6,8 @@ import { useUserRole } from "@/hooks/useUserRole";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "DreamMore Academics — Trainer Onboarding" },
-      { name: "description", content: "Sign in to complete your DreamMore trainer agreement." },
+      { title: "Dream-More Digital Academics — Trainer Onboarding" },
+      { name: "description", content: "Sign in to complete your Dream-More Digital trainer agreement." },
     ],
   }),
   component: Index,

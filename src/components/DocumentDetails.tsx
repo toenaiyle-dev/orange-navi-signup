@@ -5,10 +5,10 @@ export function DocumentDetails() {
     <div className="space-y-8 text-sm leading-relaxed">
       <section>
         <div className="text-primary text-xs font-semibold tracking-widest">JOINING THE</div>
-        <h2 className="text-2xl font-bold text-[var(--navy)] mt-1">DreamMore Academics Faculty</h2>
+        <h2 className="text-2xl font-bold text-[var(--navy)] mt-1">Dream-More Digital Academics Faculty</h2>
         <p className="italic text-muted-foreground">Shaping the Future of Digital Skills</p>
         <p className="mt-3">
-          At DreamMore Academics, our ultimate goal is to build a practical, organized, and top-tier
+          At Dream-More Digital Academics, our ultimate goal is to build a practical, organized, and top-tier
           training department. We develop high-level digital skills, support student growth, and produce
           job-ready creative professionals. Real education comes from professionals who work in the
           industry — and we're excited to discuss how your expertise aligns with our vision.
