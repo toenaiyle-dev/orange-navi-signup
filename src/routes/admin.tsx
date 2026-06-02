@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { SignaturePad, type SignaturePadHandle } from "@/components/SignaturePad";
 import { CheckCircle2, Clock, Loader2, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
+import logoUrl from "@/assets/dreammore-logo.svg";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "Admin — DreamMore" }] }),
@@ -86,7 +87,7 @@ function AdminPage() {
     <div className="min-h-screen bg-background flex flex-col">
       <header className="bg-[var(--navy)] text-[var(--navy-foreground)] py-4 px-6 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary text-primary-foreground font-bold">D</div>
+          <img src={logoUrl} alt="DreamMore" className="h-9 w-9 bg-white rounded-md p-1" />
           <span className="font-bold">DreamMore — Admin</span>
         </Link>
         <Button onClick={signOut} variant="outline" size="sm" className="border-white/30 bg-transparent text-[var(--navy-foreground)] hover:bg-white/10">

@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
+import logoUrl from "@/assets/dreammore-logo.svg";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({ meta: [{ title: "Sign in — DreamMore Academics" }] }),
@@ -64,7 +65,7 @@ function AuthPage() {
     <div className="min-h-screen flex flex-col bg-background">
       <header className="bg-[var(--navy)] text-[var(--navy-foreground)] py-4 px-6">
         <Link to="/" className="flex items-center gap-2 w-fit">
-          <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary text-primary-foreground font-bold">D</div>
+          <img src={logoUrl} alt="DreamMore" className="h-9 w-9 bg-white rounded-md p-1" />
           <span className="font-bold">DreamMore Academics</span>
         </Link>
       </header>
