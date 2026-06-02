@@ -19,7 +19,7 @@ import { TRACKS, COURSES, COURSES_BY_TRACK } from "@/lib/agreement-options";
 import logoUrl from "@/assets/dreammore-logo.svg";
 
 export const Route = createFileRoute("/agreement")({
-  head: () => ({ meta: [{ title: "Trainer Readiness Agreement — DreamMore" }] }),
+  head: () => ({ meta: [{ title: "Trainer Readiness Agreement — Dream-More Digital" }] }),
   component: AgreementPage,
 });
 
@@ -222,7 +222,7 @@ function AgreementPage() {
         if (i > 0) pdf.addPage();
         pdf.addImage(img, "JPEG", 0, 0, pageWidth, h);
       }
-      pdf.save(`DreamMore-Agreement-${existing.instructor_name.replace(/\s+/g, "_") || "trainer"}.pdf`);
+      pdf.save(`Dream-More Digital-Agreement-${existing.instructor_name.replace(/\s+/g, "_") || "trainer"}.pdf`);
       toast.success("Document downloaded");
     } catch (err: any) {
       toast.error(`Could not generate PDF: ${err?.message ?? "unknown error"}`);
@@ -271,7 +271,7 @@ function AgreementPage() {
           <div className="bg-card rounded-lg shadow-md p-8 border-t-4 border-primary text-center">
             <CheckCircle2 className="h-16 w-16 text-primary mx-auto" />
             <h2 className="text-2xl font-bold text-[var(--navy)] mt-4">Approved — welcome aboard, {existing.instructor_name}!</h2>
-            <p className="text-muted-foreground mt-2">Your agreement has been signed by DreamMore administration.</p>
+            <p className="text-muted-foreground mt-2">Your agreement has been signed by Dream-More Digital administration.</p>
             <div className="flex flex-wrap justify-center gap-3 mt-6">
               <Button onClick={downloadPdf} disabled={downloading} className="bg-primary text-primary-foreground hover:bg-primary/90">
                 {downloading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Download className="h-4 w-4 mr-2" />}
@@ -438,9 +438,9 @@ function Header({ email, onSignOut }: { email?: string; onSignOut: () => void })
     <header className="bg-[var(--navy)] text-[var(--navy-foreground)] py-4 px-6 flex items-center justify-between">
       <Link to="/" className="flex items-center gap-2">
         <div className="flex h-10 w-10 items-center justify-center rounded-md bg-white/95 p-1 shadow-sm">
-          <img src={logoUrl} alt="DreamMore" className="h-full w-full object-contain" />
+          <img src={logoUrl} alt="Dream-More Digital" className="h-full w-full object-contain" />
         </div>
-        <span className="font-bold tracking-tight">DreamMore Academics</span>
+        <span className="font-bold tracking-tight">Dream-More Digital Academics</span>
       </Link>
       <div className="flex items-center gap-3 text-sm">
         <span className="opacity-80 hidden sm:inline">{email}</span>

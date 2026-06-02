@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import logoUrl from "@/assets/dreammore-logo.svg";
 
 export const Route = createFileRoute("/admin")({
-  head: () => ({ meta: [{ title: "Admin — DreamMore" }] }),
+  head: () => ({ meta: [{ title: "Admin — Dream-More Digital" }] }),
   component: AdminPage,
 });
 
@@ -87,8 +87,8 @@ function AdminPage() {
     <div className="min-h-screen bg-background flex flex-col">
       <header className="bg-[var(--navy)] text-[var(--navy-foreground)] py-4 px-6 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
-          <img src={logoUrl} alt="DreamMore" className="h-9 w-9 bg-white rounded-md p-1" />
-          <span className="font-bold">DreamMore — Admin</span>
+          <img src={logoUrl} alt="Dream-More Digital" className="h-9 w-9 bg-white rounded-md p-1" />
+          <span className="font-bold">Dream-More Digital — Admin</span>
         </Link>
         <Button onClick={signOut} variant="outline" size="sm" className="border-white/30 bg-transparent text-[var(--navy-foreground)] hover:bg-white/10">
           Sign out
