@@ -149,7 +149,6 @@ function AgreementPage() {
 
   const handleTabChange = (v: string) => {
     setTab(v as "details" | "form");
-    setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
   };
 
   const submit = async (e: React.FormEvent) => {
